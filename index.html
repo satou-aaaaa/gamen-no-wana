@@ -512,7 +512,7 @@ function keep() { let ok = false; save((s) => { const r = s.runs[MODE]; if (!sam
 function stale() { toast("別のタブで進んでいます。読み直します"); play(); }
 const lbl = () => { const r = load().runs[MODE]; if (!r) return ""; return cur.mode === "e" ? `とことん ${cur.i + 1}画面目` : `${cur.mode === "h" ? "上級" : cur.mode === "a" ? md(cur.date) + "の5画面" : "今日の5画面"} ${cur.i + 1}/${r.list.length}`; };
 function partHtml(p, j) {
-  const c = cur, st = c.ph === "done" && c.sc.traps.includes(j) ? " hit" : c.bad.includes(j) ? " bad" : c.out.includes(j) ? " out" : "";
+  const c = cur, st = c.ph !== "find" && c.sc.traps.includes(j) ? " hit" : c.bad.includes(j) ? " bad" : c.out.includes(j) ? " out" : "";
   const dis = c.ph !== "find" || c.bad.includes(j) || c.out.includes(j);
   const sx = p.s ? `<span class="sx">${esc(p.s)}</span>` : "";
   let inner;

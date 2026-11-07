@@ -54,7 +54,10 @@ const KEY = "gamen-no-wana-v1"; // gitleaks:allow 記録の名前（鍵ではな
   check("お笑いの言葉を入れない（本物っぽさ優先）", !FUNNY.some((w) => (allText + html).includes(w)));
   check("gen.js は Math.random を使わない（同じ日はだれでも同じ画面）", !/Math\.random/.test(gen));
   check("index.html の Math.random はとことんの並び・回の名札だけ（4か所）", (html.match(/Math\.random/g) || []).length === 4, String((html.match(/Math\.random/g) || []).length));
-  check("乱数を sort の比較の中で引かない", !/sort\([^)]*(random|R\(\))/.test(html + gen));
+  // 比較の関数の引数（(a, b)）を読み飛ばしてから、同じ文の中の乱数を探す（[^)]* だと最初の ) で止まり、ふつうの書き方を見逃した。2026-11-07 CodeRabbit）
+  const sortRand = (html + gen).match(/\.sort\(\s*(?:function\s*)?\([^)]*\)\s*(?:=>)?[^;]{0,200}?(Math\.random|\bR\(\)|\brng\(|\br\(\))/g) || [];
+  check("乱数を sort の比較の中で引かない", sortRand.length === 0, sortRand.slice(0, 3).join(" / "));
+  check("sort の乱数の検査は、ふつうの書き方を見つける", [".sort(() => Math.random() - 0.5)", ".sort((a, b) => R() - .5)", ".sort(function (a, b) { return rng() - 0.5; })"].every((t) => /\.sort\(\s*(?:function\s*)?\([^)]*\)\s*(?:=>)?[^;]{0,200}?(Math\.random|\bR\(\)|\brng\(|\br\(\))/.test(t)));
   check("画面の文字に ${ が出る書き方をしていない（'…' の中の ${）", !/'[^'\n]*\$\{[^'\n]*'/.test(html.replace(/`[^`]*`/gs, "")));
 }
 
@@ -139,6 +142,8 @@ try {
     else {
       await p.click(`[data-j="${c.traps[0]}"]`);
       check("ワナを押すと ✓ が付き、名前の札が3枚出る", (await p.locator(".names button").count()) === 3 && await p.evaluate((j) => document.querySelector(`[data-j="${j}"]`).classList.contains("hit"), c.traps[0]));
+      await p.reload(); await closeHow(p); await p.click("#go-d");
+      check("名前を選ぶ途中で開き直しても、ワナの部品に ✓ が残り、名前の札が出る", (await p.locator(".names button").count()) === 3 && await p.evaluate((j) => document.querySelector(`[data-j="${j}"]`).classList.contains("hit"), c.traps[0]));
       const wn = c.names.find((t) => t !== c.t); await p.click(`.names [data-t="${wn}"]`);
       check("まちがえた札は ✕ と破線で残り、押せなくなる", await p.evaluate((t) => { const b = document.querySelector(`.names [data-t="${t}"]`); return b.disabled && b.classList.contains("bad"); }, wn));
       await p.click(`.names [data-t="${c.t}"]`);
