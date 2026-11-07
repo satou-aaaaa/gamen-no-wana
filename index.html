@@ -103,6 +103,9 @@ button.sub:disabled{color:var(--ink2);cursor:default;border-style:dashed}
 .verdict .nm{font-size:22px;font-weight:800;text-align:center;color:var(--ok)}
 .verdict .cat{font-size:12px;color:var(--ink2);text-align:center}
 .verdict p{margin:0;font-size:14px;line-height:1.7}
+.verdict .honest{border:2px dashed var(--ok);border-radius:12px;padding:8px 10px;font-size:14px;line-height:1.6;display:flex;flex-direction:column;gap:2px}
+.verdict .honest b{font-size:13px;color:var(--ink2)}
+.verdict .help{font-size:13px;color:var(--ink2)}
 .verdict p b{color:var(--acc)}
 .stars{color:var(--gold);letter-spacing:.1em;font-size:20px}
 .stars .off{color:var(--ink2)}
@@ -496,12 +499,19 @@ function play() {
   if (run.mode === "e" && i >= run.list.length) { save((t) => { const r = t.runs[MODE]; if (r && r.id === run.id && r.list.length <= i) r.list = r.list.concat(endlessList(r.list[r.list.length - 1].t)); }); return play(); }
   const it = run.list[i], sc = scOf(it), hard = run.mode === "h";
   const sv = run.cur && run.cur.i === i && validCur(run.cur, sc) ? run.cur : null;
-  cur = Object.assign({ i, id: run.id, date: run.date, mode: run.mode, it, sc, hard, ph: "find", m: 0, hints: 0, bad: [], nb: false, badN: [], out: [], outN: [], look: false }, sv || {});
+  cur = Object.assign({ i, id: run.id, date: run.date, mode: run.mode, it, sc, hard, ph: "find", m: 0, hints: 0, bad: [], nb: false, badN: [], out: [], outN: [], look: false }, sv ? { ph: sv.ph, m: sv.m, hints: sv.hints, bad: sv.bad, nb: !!sv.nb, badN: sv.badN, out: sv.out, outN: sv.outN, look: !!sv.look } : {});
   if (!Array.isArray(cur.outN)) cur.outN = [];
   cur.names = W.choices(it, hard ? 4 : 3);
   draw();
 }
 // 保存してあった途中経過が、この画面で正しいか
+// 同じ画面の「ワナの無い形」で、ワナの部品がどう書かれるか（くらべて覚える）
+function honestHtml(c) {
+  const hs = W.make(Object.assign({}, c.it, { h: 1 })), tx = (p) => (p.k === "check" ? (p.on ? "☑ " : "☐ ") : p.k === "radio" ? (p.on ? "◉ " : "○ ") : "") + p.x + (p.s ? "：" + p.s : ""), has = new Set(c.sc.parts.map(tx));
+  const diff = hs.parts.map(tx).filter((t) => !has.has(t));
+  return diff.length ? `<div class="honest"><b>ワナの無い画面なら</b>${diff.map((t) => `<span>「${esc(t)}」</span>`).join("")}</div>` : "";
+}
+const HELP = ["teiki", "kaiyaku", "cost", "kago", "jizen"];
 function validCur(c, sc) {
   const n = sc.parts.length, ints = (a, mx) => Array.isArray(a) && a.every((x) => Number.isInteger(x) && x >= 0 && x < mx);
   return ["find", "name"].includes(c.ph) && Number.isInteger(c.m) && c.m >= 0 && Number.isInteger(c.hints) && c.hints >= 0 && c.hints <= 2 && ints(c.bad, n) && ints(c.out, n) && ints(c.badN, NT) && (c.outN === undefined || ints(c.outN, NT)) && !c.bad.some((j) => sc.traps.includes(j)) && !c.out.some((j) => sc.traps.includes(j)) && !c.badN.includes(sc.t) && (c.ph === "find" || !sc.h);
@@ -616,7 +626,7 @@ function solve() {
   const last = MODE !== "e" && load().runs[MODE] && load().runs[MODE].res.length >= load().runs[MODE].list.length;
   $("panel").innerHTML = `<div class="verdict" id="verdict">
       <div class="hd">${sc.h ? "✓ 正直な画面" : "✓ 見抜いた！"}　${starStr(st)}</div>
-      ${sc.h ? `<p data-a11y-say>${esc(W.HONEST)}</p><p>ワナに見えた所は、正直な形になっていました（${esc(T.name)}を使わない形）。</p>` : `<div class="nm" data-a11y-say>${esc(T.name)}</div><div class="cat">消費者庁の分け方：${esc(T.cat)}</div><p data-a11y-say><b>どんなワナ</b>　${esc(T.def)}</p><p data-a11y-say><b>身を守るコツ</b>　${esc(T.tip)}</p>`}
+      ${sc.h ? `<p data-a11y-say>${esc(W.HONEST)}</p><p>ワナに見えた所は、正直な形になっていました（${esc(T.name)}を使わない形）。</p>` : `<div class="nm" data-a11y-say>${esc(T.name)}</div><div class="cat">消費者庁の分け方：${esc(T.cat)}</div><p data-a11y-say><b>どんなワナ</b>　${esc(T.def)}</p><p data-a11y-say><b>身を守るコツ</b>　${esc(T.tip)}</p>${honestHtml(c)}${HELP.includes(T.id) ? `<p class="help">お金のことで困ったら、消費者ホットライン「188（いやや）」で近くの消費生活センターに相談できます。</p>` : ""}`}
       <button class="main" id="next">${MODE === "e" ? "次の画面" : last ? "結果を見る" : "次の画面"}</button></div>`;
   say(sc.h ? "✓ 正直な画面でした。" : `✓ 見抜いた。${T.name}。${T.def}`);
   $("next").onclick = () => (MODE !== "e" && last ? finish() : play());
