@@ -29,4 +29,5 @@ jobs:
       # （2026-11-04 incidents/2026-11-04-link-check-readme-only-main.md）
       files: '*.html README.md'
       # 自分たちの公開ページ（*.github.io）は各リポジトリの site-watch が毎日見張る。初めて公開する前の PR では 404 になるので、ここでは調べない
-      exclude: '^https://satou-aaaaa\.github\.io/'
+      # www.ftc.gov は自動で読みに来る相手に 404 を返す（ブラウザでは開く。2026-11-07 FTC の報告書 Bringing Dark Patterns to Light で確かめた）
+      exclude: '^https://satou-aaaaa\.github\.io/ ^https://www\.ftc\.gov/'
