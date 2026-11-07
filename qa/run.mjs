@@ -27,7 +27,9 @@ const KEY = "gamen-no-wana-v1"; // gitleaks:allow 記録の名前（鍵ではな
   check("どの種類も消費者庁の9つの仲間（カテゴリー）のどれかに入る", W.TYPES.every((t) => CATS.includes(t.cat)), W.TYPES.filter((t) => !CATS.includes(t.cat)).map((t) => t.id).join(","));
   const longT = W.TYPES.flatMap((t) => ["def", "tip", "look"].filter((k) => !t[k] || t[k].length > 40).map((k) => t.id + "." + k));
   check("どの種類にも説明・身を守るコツ・ヒントがあり、40字以内", longT.length === 0, longT.join(","));
-  check("どの種類にも画面の形が2つずつある", W.TYPES.every((t) => (W.FORMS[t.id] || []).length === 2));
+  check("どの種類にも画面の形が4つずつある", W.TYPES.every((t) => (W.FORMS[t.id] || []).length === 4));
+  { const nd = []; for (let t = 0; t < W.TYPES.length; t++) for (let v = 0; v < W.FORMN[t]; v++) for (let s = 0; s < 50; s++) { const it = { t, v, s: W.seedOf(`hd:${t}:${v}:${s}`), h: 0 }, a = W.make(it), b = W.make(Object.assign({}, it, { h: 1 })), tx = (p) => (p.on ? "☑" : "") + p.x + (p.s || ""); if (!b.parts.some((p) => !a.parts.map(tx).includes(tx(p)))) nd.push(W.TYPES[t].id + "/" + v); }
+    check("どのワナの画面も、同じ種の「ワナの無い画面」と書き方がちがう（くらべて見せられる）", nd.length === 0, [...new Set(nd)].join(",")); }
   const bad = [], keys = new Set(), trapKeys = new Set();
   for (let t = 0; t < W.TYPES.length; t++) for (let v = 0; v < W.FORMN[t]; v++) for (const h of [0, 1]) for (let s = 0; s < 300; s++) {
     const it = { t, v, s: W.seedOf(`qa:${t}:${v}:${h}:${s}`), h }, sc = W.make(it), sc2 = W.make(it);
@@ -109,7 +111,7 @@ try {
       const eb = []; let first = 0;
       for (let n = 0; n < 500; n++) {
         const last = n % N, L = g.endlessList(last), ids = L.map((x) => x.t + ":" + x.v);
-        if (new Set(ids).size !== ids.length || ids.length !== 36) eb.push("重なり");
+        if (new Set(ids).size !== ids.length || ids.length !== window.WANA.FORMN.reduce((a, b) => a + b, 0)) eb.push("重なり");
         for (let i = 1; i < L.length; i++) if (L[i].t === L[i - 1].t) eb.push("続けて同じ種類");
         if (L[0].t === last) first++;
       }
@@ -149,6 +151,7 @@ try {
       await p.click(`.names [data-t="${c.t}"]`);
     }
     check("見抜くと、名前・どんなワナ・身を守るコツ（ワナの無い画面は説明）が出る", (await p.locator("#verdict").count()) === 1 && (c.h || ((await p.textContent("#verdict")).includes("身を守るコツ"))));
+    if (!c.h) check("見抜いたあと「ワナの無い画面なら」に、正直な書き方を出す（くらべて覚える）", (await p.locator("#verdict .honest span").count()) >= 1);
     await p.click("#next");
     // 2画面目：「ワナは無い」をまちがえる（ワナがあるときだけ）、そのあと答える。2画面目を終えたら読み直して続きから
     c = await curOf(p);
