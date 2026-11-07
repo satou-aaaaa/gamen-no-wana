@@ -1,0 +1,8 @@
+{
+  "screens": [
+    { "name": "今日の5画面", "click": ["#go-d"] },
+    { "name": "とことん", "click": ["#go-e"] },
+    { "name": "ワナ図鑑", "click": ["#go-dex"] },
+    { "name": "カレンダー", "click": ["#go-cal"] }
+  ]
+}
