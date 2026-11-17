@@ -23,14 +23,15 @@ node qa/run.mjs   # 種類と画面の作り方（全部の形×300の種）・�
 - 今日の5画面（種類を重ねない・4割の日は1つが正直な画面）・上級（今日と別の3種類・札4枚・ヒントなし）は日本時間の日付の種（`seedOf`・`rng`）で決まり、だれでも同じ。`Math.random()` はとことんの並びと回の名札だけ（QA が数を見る）。乱数を sort の比較の中で引かない。
 - ★はまちがい＋ヒントの数（0で★3・1で★2・2以上で★1）。ヒントは2段（1回目は `look`、2回目はワナでない部品を外す。名前の札ではまちがいの札を1枚へらす）。時間制限は付けない。見抜いたら必ず「どんなワナ」「身を守るコツ」を出す。
 - 好きなだけ遊べる：チケット・回数制限・🔒で開くモードを入れない。とことん（`runs.e`）は全部の種類×形を毎回ちがう並びで出し（1つの並びで同じものを出さず、続けて同じ種類を出さない。使い切ったら並びを足す）、まちがえても終わらず「ここで降りる」まで続く。自己ベスト `ebest` は一度で見抜いた数。今日の記録・連続・Ko-fi・シェアには数えない（図鑑・実績には入る）。
-- 記録 `gamen-no-wana-v1`：`days`・`hdays`・`adays`（あとから）・`dex`（種類ごとの数）・`hon`（正直な画面）・`total`・`ebest`・`runs`（`d`・`h`・`e`・`a:日付`）・`ach`・`kofi`。保存の前に読み直し（`save`）、2つの記録は `merge` で合わせる（日ごとは両方、数は大きいほう、同じ回の途中は進んだほう）。答えを書く前に、保存した回の id と画面が同じか確かめる（`same`。古いタブで二重に数えない）。引き継ぎで入った記録は `clean` で形をそろえる。
-- 実績（`achList`、13個）は記録から毎回数える。続けるは合計の日数（`playedDays`）、連続の日は1以上のときだけ出す。取りこぼした日（きのう〜7日前・`EPOCH` から）はカレンダーから「あとから」遊べる（その日の今日の5画面と同じ）。
+- 記録 `gamen-no-wana-v1`：`days`・`hdays`・`adays`（あとから）・`dex`（種類ごとの数）・`hon`（正直な画面）・`total`・`ebest`・`runs`（`d`・`h`・`e`・`a:日付`・`r`＝復習）・`ach`・`kofi`。保存の前に読み直し（`save`）、2つの記録は `merge` で合わせる（日ごとは両方、数は大きいほう、同じ回の途中は進んだほう）。答えを書く前に、保存した回の id と画面が同じか確かめる（`same`。古いタブで二重に数えない）。引き継ぎで入った記録は `clean` で形をそろえる。
+- 実績（`achList`、15個）は記録から毎回数える。続けるは合計の日数（`playedDays`）、連続の日は1以上のときだけ出す。取りこぼした日（きのう〜7日前・`EPOCH` から）はカレンダーから「あとから」遊べる（その日の今日の5画面と同じ）。
+- 1問を深くする（shared-workflows `routines/game-dev.md`「1問を深くする」）：`depth.js`・`qa/depth-check.mjs` は shared-workflows `template/` の写し（ここで直さない）。復習の記録は `gamen-no-wana-depth`（引き継ぎの `data-keys` にも入れる）。鍵は「種類の id|形|種|正直か」（`tagOf`・`itOf`。種類で復習をまぜる）。「🎯 自信あり？」は「ワナはどこ」に最初に答えたときに `Depth.judge`（名前の札はもとからある2つ目の判断なので、2段目は足さない）。まちがい・ヒントのその時（`keep` の `same` のあと `early()`）と見きわめたときに `Depth.mark`。復習（`runs.r`）は今日の記録・連続・あとから・Ko-fi・シェアに数えない。今日の5画面・上級の並びには触らない。
 - 共有は遊ぶ人が押したときに開くリンク（X・LINE・Web Share・コピー）だけ。シェアの文は四角だけで、ワナの名前を出さない。
 - 応援は Ko-fi（https://ko-fi.com/satouaaaaa）へのただのリンクだけ。今日の5画面・上級を初めて全部★3で終えたときだけ、結果の画面に1行（共有フォルダ kofi/app-guide.md）。
 - 感想は `.github/ISSUE_TEMPLATE/feedback.yml`（shared-workflows `template/` の写し）を開くただのリンク。名前・メールは聞かない。
 - 外へ通信しない。外から読むのは Google Fonts の文字だけ（CSP の `connect-src 'self'` を広げない）。記録は遊ぶ人のブラウザ（localStorage）だけ。
 - 見やすさ：`</head>` の前の見やすさの設定（`<!-- a11y:begin -->`〜`end`）は shared-workflows `template/a11y/a11y.html` の写し、`qa/a11y.mjs` も `template/qa/a11y.mjs` の写しで、ここでは直さない。色だけで分けない（ワナ＝✓と太い枠、ちがう＝✕と破線、ヒントで外した＝点線と「ここではない」、取れない星は ☆、カレンダーは ★ ↺ ▲ ▶）。部品は全部ボタンで、読み上げ用の名前（チェックの有無・「広告」の小さな字）を持つ。知らせは `#live`（role=status）。
-- 引き継ぎコード：`transfer.js`・`qa/transfer-check.mjs` は shared-workflows `template/` の写し（ここで直さない）。`data-keys` は `gamen-no-wana-v1`。記録の形を変えたら `qa/run.mjs` の引き継ぎの `sample` も合わせる。
+- 引き継ぎコード：`transfer.js`・`qa/transfer-check.mjs` は shared-workflows `template/` の写し（ここで直さない）。`data-keys` は `gamen-no-wana-v1,gamen-no-wana-depth`。記録の形を変えたら `qa/run.mjs` の引き継ぎの `sample` も合わせる。
 - PWA（`manifest.webmanifest`・`sw.js`・`icon-*.png`）：画面のファイルを足したら `sw.js` の `SHELL` にも足し、中身を大きく変えたら `CACHE` の版を上げる。アイコンは `node tools/make-icons.cjs`、SNS 用の絵 `og.png` は `node tools/make-og.cjs`（今日の画面を入れない）。
 - 押せる所は高さ44px以上・幅320pxではみ出さない（QA が見る）。機能を足す・直すたびに `qa/run.mjs` に検査を足す。乱数で組む部分は何百回・何年分も作って確かめる（shared-workflows `incidents/2026-10-31-roppo-empty-village.md`）。少し遅れて動く処理は、画面が替わっていたら何もしない（`VIEW`）。
 - 公開リポジトリなので、個人情報・鍵を入れない。
