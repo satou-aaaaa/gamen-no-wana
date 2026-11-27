@@ -20,6 +20,8 @@ const firstClose = async (q) => { if (await q.locator("#howto[open]").count()) a
 createRequire(import.meta.url)(path.join(root, "gen.js"));
 const W = globalThis.WANA;
 const html = readFileSync(path.join(root, "index.html"), "utf8"), gen = readFileSync(path.join(root, "gen.js"), "utf8");
+// ひな形の写し（<!-- 名前:begin〜end -->）はゲームの言葉ではないので外し、Core.kofi・Core.KOFI は写す前の形にもどして見る（shared-workflows の sync-template が足した）
+const gameOwn = (t) => t.replace(/<!-- ([a-z0-9-]+):begin[\s\S]*?<!-- \1:end -->/g, "").split("${Core.KOFI}").join("https://ko-fi.com/satouaaaaa").replace(/Core\.kofi\(("(?:[^"\\]|\\.)*"), ("(?:[^"\\]|\\.)*")\)/g, (m, a, b) => "`<p class=\"note kofi\">" + JSON.parse(a) + "、<a href=\"https://ko-fi.com/satouaaaaa\" target=\"_blank\" rel=\"noopener\">Ko-fi でコーヒー1杯の応援</a>をもらえると、" + JSON.parse(b) + "の励みになります（任意・遊ぶのはずっと無料）。</p>`");
 const KEY = "gamen-no-wana-v1"; // gitleaks:allow 記録の名前（鍵ではない）
 
 // 1. ワナの種類と画面（ブラウザを使わない）
@@ -73,7 +75,7 @@ const KEY = "gamen-no-wana-v1"; // gitleaks:allow 記録の名前（鍵ではな
   check("sw.js は取り直して保存する（cache: reload。game-dev.md の PWA）", /cache: "reload"/.test(sw));
   { const st = await checkSwStall(sw); check("PWA：本文の途中で通信が止まっても4秒で保存したものを返す・ふつうはネットの返事", st.ok, JSON.stringify(st)); }
   check("manifest のアイコンが全部ある", man.icons.every((i) => existsSync(path.join(root, i.src))) && existsSync(path.join(root, "og.png")));
-  check("チケット・回数制限・🔒で開くモードを入れない（game-dev.md F1・F2）", !/🎫|すると開く|チケット|スタミナ|ライフ/.test(html));
+  check("チケット・回数制限・🔒で開くモードを入れない（game-dev.md F1・F2）", !/🎫|すると開く|チケット|スタミナ|ライフ/.test(gameOwn(html)));
   check("CSP の connect-src は 'self' のまま", /connect-src 'self';/.test(html));
   check("見やすさの設定は shared-workflows template/a11y/a11y.html の写し（a11y:begin〜end）", /<!-- a11y:begin[\s\S]*<!-- a11y:end -->/.test(html));
   check("引き継ぎの部品を読む（data-keys は記録と復習の記録のキーだけ）", /<script src="transfer.js" data-game="gamen-no-wana" data-keys="gamen-no-wana-v1,gamen-no-wana-depth"><\/script>/.test(html)); // gitleaks:allow 記録の名前（鍵ではない）
